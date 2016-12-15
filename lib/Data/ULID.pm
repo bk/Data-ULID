@@ -108,16 +108,16 @@ Data::ULID - Universally Unique Lexicographically Sortable Identifier
 
  use Data::ULID qw/ulid binary_ulid ulid_date/;
 
- my $id = ulid();  # 01ARZ3NDEKTSV4RRFFQ69G5FAV
+ my $id = ulid();  # e.g. 01ARZ3NDEKTSV4RRFFQ69G5FAV
  my $binary_id = binary_ulid($id);
- my $datetime_obj = ulid_date($id);  # 2016-06-13T13:25:20
+ my $datetime_obj = ulid_date($id);  # e.g. 2016-06-13T13:25:20
 
 =head1 DESCRIPTION
 
 =head2 Background
 
-This is an implementation in Perl of the ULID identifier. The original
-implementation (in Javascript) can be found at
+This is an implementation in Perl of the ULID identifier type introducted by
+Alizain Feerasta. The original implementation (in Javascript) can be found at
 L<https://github.com/alizain/ulid>.
 
 ULIDs have several advantages over UUIDs in many contexts. The advantages
@@ -154,7 +154,8 @@ consisting of (1) a 10-byte timestamp with millisecond-resolution; and (2) a
 16-byte random part.
 
 Without paramters, the C<ulid()> function returns a new ULID in the canonical
-representation, with the current timestamp in the timestamp part.
+representation, with the current time (up to the nearest millisecond) in the
+timestamp part.
 
  $ulid = ulid();
 
