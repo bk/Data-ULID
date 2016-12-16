@@ -3,7 +3,7 @@ package Data::ULID;
 use strict;
 use warnings;
 
-our $VERSION = '0.1';
+our $VERSION = '0.1.1';
 
 use base qw(Exporter);
 our @EXPORT_OK = qw/ulid binary_ulid ulid_date/;
@@ -42,7 +42,7 @@ sub ulid_date {
 sub _ulid {
     my $arg = shift;
     my $ts;
-    if ($arg && $arg->isa('DateTime')) {
+    if ($arg && ref $arg && $arg->isa('DateTime')) {
         $ts = int($arg->hires_epoch * 1000);
     }
     elsif ($arg && length($arg) == 16) {
@@ -83,7 +83,7 @@ sub _unpack {
     return ($ts, $rand);
 }
 
-sub _bint { Math::BigInt->new(shift) }
+sub _bint { Math::BigInt->new('' . shift) }
 
 sub _bigrand {
     # 80-bit random bigint.
@@ -199,6 +199,8 @@ Baldur Kristinsson, December 2016
 
 =head1 VERSION
 
- 0.1 - initial version.
+ 0.1   - Initial version.
+ 0.1.1 - Bugfixes: (a) fix errors on Perl 5.18 and older, (b) address an issue
+         with GMPz wrt Math::BigInt objects.
 
 =cut
