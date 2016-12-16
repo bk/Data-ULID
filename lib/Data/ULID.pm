@@ -3,7 +3,7 @@ package Data::ULID;
 use strict;
 use warnings;
 
-our $VERSION = '0.1.1';
+our $VERSION = '0.2';
 
 use base qw(Exporter);
 our @EXPORT_OK = qw/ulid binary_ulid ulid_date/;
@@ -199,8 +199,8 @@ Baldur Kristinsson, December 2016
 
 =head1 VERSION
 
- 0.1   - Initial version.
- 0.1.1 - Bugfixes: (a) fix errors on Perl 5.18 and older, (b) address an issue
-         with GMPz wrt Math::BigInt objects.
+ 0.1 - Initial version.
+ 0.2 - Bugfixes: (a) fix errors on Perl 5.18 and older, (b) address an issue
+       with GMPz wrt Math::BigInt objects.
 
 =cut
