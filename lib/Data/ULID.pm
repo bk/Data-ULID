@@ -3,7 +3,7 @@ package Data::ULID;
 use strict;
 use warnings;
 
-our $VERSION = '0.2';
+our $VERSION = '0.3';
 
 use base qw(Exporter);
 our @EXPORT_OK = qw/ulid binary_ulid ulid_date/;
@@ -23,7 +23,7 @@ use constant BI_2_64 => Math::BigInt->new('18446744073709551616');
 
 sub ulid {
     my ($ts, $rand) = _ulid(shift);
-    return sprintf('%010s%016s', encode_base32($ts) , encode_base32($rand));
+    return sprintf('%010s%016s', encode_base32(''.$ts), encode_base32(''.$rand));
 }
 
 sub binary_ulid {
@@ -37,6 +37,26 @@ sub ulid_date {
     my ($ts, $rand) = _ulid($ulid);
     $ts = _bint($ts);
     return DateTime->from_epoch(epoch=>$ts / 1000);
+}
+
+sub ulid2uuid {
+    my $bin = binary_ulid(shift);
+    my $bin_uuid = _binulid_to_binuuid($bin);
+    return _uuid_to_string($bin_uuid);
+}
+
+sub uuid2ulid {
+    my $uuid = shift;
+    my $bin_uuid = _string_to_uuid($uuid);
+    return ulid(_binuuid_to_binulid($bin_uuid));
+}
+
+sub _binulid_to_binuuid {
+    my $bin = shift;
+}
+
+sub _binuuid_to_binulid {
+    my $bin_uuid = shift;
 }
 
 sub _ulid {
@@ -202,5 +222,7 @@ Baldur Kristinsson, December 2016
  0.1 - Initial version.
  0.2 - Bugfixes: (a) fix errors on Perl 5.18 and older, (b) address an issue
        with GMPz wrt Math::BigInt objects.
+ 0.3 - Bugfix: Try to prevent 'Inappropriate argument' error from pre-0.43
+       versions of Math::GMPz.
 
 =cut
