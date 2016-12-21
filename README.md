@@ -14,7 +14,7 @@ Data::ULID - Universally Unique Lexicographically Sortable Identifier
 
 ## Background
 
-This is an implementation in Perl of the ULID identifier type introducted by
+This is an implementation in Perl of the ULID identifier type introduced by
 Alizain Feerasta. The original implementation (in Javascript) can be found at
 [https://github.com/alizain/ulid](https://github.com/alizain/ulid).
 
@@ -77,6 +77,17 @@ a DateTime object corresponding to the timestamp it encodes.
 
 Baldur Kristinsson, December 2016
 
+# TODO
+
+Add functions for converting to/from UUID (Version 1), since both identifier
+types are 128-bit and incorporate a timestamp.
+
 # VERSION
 
-    0.1 - initial version.
+    0.1 - Initial version.
+    0.2 - Bugfixes: (a) fix errors on Perl 5.18 and older, (b) address an issue
+          with GMPz wrt Math::BigInt objects.
+    0.3 - Bugfix: Try to prevent 'Inappropriate argument' error from pre-0.43
+          versions of Math::GMPz.
+    0.4 - Bugfix: 'Invalid argument supplied to Math::GMPz::overload_mod' for
+          older versions of Math::GMPz on Windows and FreeBSD. Podfix.

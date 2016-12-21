@@ -3,7 +3,7 @@ package Data::ULID;
 use strict;
 use warnings;
 
-our $VERSION = '0.3';
+our $VERSION = '0.4';
 
 use base qw(Exporter);
 our @EXPORT_OK = qw/ulid binary_ulid ulid_date/;
@@ -88,6 +88,7 @@ sub _normalize {
 
 sub _pack {
     my ($ts, $rand) = @_;
+    $rand = _bint($rand) unless ref $rand && $rand->isa('Math::BigInt');
     my $t1 = int($ts / 2**16);
     my $t2 = $ts % 2**16;
     my $r1 = $rand >> 64;
@@ -136,7 +137,7 @@ Data::ULID - Universally Unique Lexicographically Sortable Identifier
 
 =head2 Background
 
-This is an implementation in Perl of the ULID identifier type introducted by
+This is an implementation in Perl of the ULID identifier type introduced by
 Alizain Feerasta. The original implementation (in Javascript) can be found at
 L<https://github.com/alizain/ulid>.
 
@@ -217,6 +218,11 @@ L<Math::Random::Secure>, L<Encode::Base32::GMP>.
 
 Baldur Kristinsson, December 2016
 
+=head1 TODO
+
+Add functions for converting to/from UUID (Version 1), since both identifier
+types are 128-bit and incorporate a timestamp.
+
 =head1 VERSION
 
  0.1 - Initial version.
@@ -224,5 +230,7 @@ Baldur Kristinsson, December 2016
        with GMPz wrt Math::BigInt objects.
  0.3 - Bugfix: Try to prevent 'Inappropriate argument' error from pre-0.43
        versions of Math::GMPz.
+ 0.4 - Bugfix: 'Invalid argument supplied to Math::GMPz::overload_mod' for
+       older versions of Math::GMPz on Windows and FreeBSD. Podfix.
 
 =cut
