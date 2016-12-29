@@ -3,10 +3,10 @@ package Data::ULID;
 use strict;
 use warnings;
 
-our $VERSION = '0.4';
+our $VERSION = '1.0.0';
 
 use base qw(Exporter);
-our @EXPORT_OK = qw/ulid binary_ulid ulid_date/;
+our @EXPORT_OK = qw/ulid binary_ulid ulid_date ulid_to_uuid uuid_to_ulid/;
 our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK );
 
 use Time::HiRes qw/time/;
@@ -20,6 +20,7 @@ use DateTime;
 use constant BI_2_32 => Math::BigInt->new('4294967296');
 use constant BI_2_48 => Math::BigInt->new('281474976710656');
 use constant BI_2_64 => Math::BigInt->new('18446744073709551616');
+
 
 sub ulid {
     my ($ts, $rand) = _ulid(shift);
@@ -39,24 +40,39 @@ sub ulid_date {
     return DateTime->from_epoch(epoch=>$ts / 1000);
 }
 
-sub ulid2uuid {
-    my $bin = binary_ulid(shift);
-    my $bin_uuid = _binulid_to_binuuid($bin);
-    return _uuid_to_string($bin_uuid);
+sub ulid_to_uuid {
+    my $ulid = shift or die "Need ULID to convert";
+    my ($ts, $rand) = _ulid($ulid);
+    my $bin = _pack($ts, $rand);
+    return _uuid_bin2str($bin)
 }
 
-sub uuid2ulid {
+sub uuid_to_ulid {
+    my $uuid = shift or die "Need UUID to convert";
+    my $bin_uuid = _uuid_str2bin($uuid);
+    my ($ts, $rand) = _ulid($bin_uuid);
+    return sprintf('%010s%016s', encode_base32(''.$ts), encode_base32(''.$rand));
+}
+
+sub _uuid_bin2str {
     my $uuid = shift;
-    my $bin_uuid = _string_to_uuid($uuid);
-    return ulid(_binuuid_to_binulid($bin_uuid));
+    use bytes;
+    return $uuid if length($uuid) == 36;
+    die "Invalid uuid" unless length $uuid == 16;
+    my @offsets = (4, 2, 2, 2, 6);
+    return join(
+        '-',
+        map { unpack 'H*', $_ }
+        map { substr $uuid, 0, $_, ''}
+        @offsets);
 }
 
-sub _binulid_to_binuuid {
-    my $bin = shift;
-}
-
-sub _binuuid_to_binulid {
-    my $bin_uuid = shift;
+sub _uuid_str2bin {
+    my $uuid = shift;
+    use bytes;
+    return $uuid if length $uuid == 16;
+    $uuid =~ s/-//g;
+    return pack 'H*', $uuid;
 }
 
 sub _ulid {
@@ -125,13 +141,17 @@ __END__
 
 Data::ULID - Universally Unique Lexicographically Sortable Identifier
 
+
 =head1 SYNOPSIS
 
  use Data::ULID qw/ulid binary_ulid ulid_date/;
 
- my $id = ulid();  # e.g. 01ARZ3NDEKTSV4RRFFQ69G5FAV
- my $binary_id = binary_ulid($id);
- my $datetime_obj = ulid_date($id);  # e.g. 2016-06-13T13:25:20
+ my $ulid = ulid();  # e.g. 01ARZ3NDEKTSV4RRFFQ69G5FAV
+ my $bin_ulid = binary_ulid($ulid);
+ my $datetime_obj = ulid_date($ulid);  # e.g. 2016-06-13T13:25:20
+ my $uuid = ulid_to_uuid($ulid);
+ my $ulid2 = uuid_to_ulid($uuid);
+
 
 =head1 DESCRIPTION
 
@@ -165,6 +185,11 @@ URL-safe
 =item *
 
 Timestamp can always be easily extracted if so desired.
+
+=item *
+
+Limited compatibility with UUIDS, since both are 128-bit formats.
+Some conversion back and forth is possible.
 
 =back
 
@@ -210,27 +235,92 @@ a DateTime object corresponding to the timestamp it encodes.
 
  $datetime = ulid_date($ulid);
 
+=head2 UUID conversion
+
+Very limited conversion between UUIDs and ULIDs is provided.
+
+In order to convert a UUID to ULID:
+
+ $ulid = uuid_to_ulid($uuid);
+
+Both binary and hexadecimal UUIDs (with or without separators) are accepted.
+The return value is a ULID string in the canonical Base32 form. Note that the
+"timestamp" of such a ULID is not to be relied upon.
+
+A ULID can also be converted to a UUID:
+
+ $uuid = ulid_to_uuid($binary_or_canonical_ulid);
+
+The UUID returned by this function is a string in the standard hyphenated
+hexadecimal format. Note that the variant and version indicators of such a
+UUID are meaningless.
+
+=head2 UUID conversion limitations
+
+Since both ULIDs and UUIDs are 128-bit, conversion back and forth is possible
+in principle. However, the two formats have different semantics. Also, any
+given UUID version has at most 122 bits of variance (4 bits being reserved as
+variant and version indicators), while all 128 bits of the ULID format can
+vary without violating the format description. This means that the conversion
+can never be made perfect.
+
+It would be possible to maintain the approximate timestamp of a Version 1 UUID
+when converting to ULID, as well as to keep the timestamp of a ULID when
+converting to UUID. However, since many UUIDs are not of Version 1, and given
+the different semantics of the two formats, the conversion provided by this
+module is much simpler and does not preserve the timestamps. In fact, about
+the only desirable property that the chosen conversion method has is that it
+is uniformly bidirectional, i.e.
+
+ $uuid eq ulid_to_uuid(ulid_to_uuid($uuid))
+
+and
+
+ $ulid eq uuid_to_ulid(ulid_to_uuid($ulid))
+
+This approach has two immediate consequences:
+
+=over
+
+=item 1.
+
+The "timestamps" of ULIDs created by converting UUIDs are meaningless.
+
+=item 2.
+
+The variant and version indicators of UUIDs created by converting ULIDs are
+similarly wrong. Such UUIDs should only be used in contexts where no checking
+of these fields will be performed and no attempt will be made to extract or
+validate non-random information (i.e. timestamp, MAC address or namespace).
+
+=back
+
+
 =head1 DEPENDENCIES
 
 L<Math::Random::Secure>, L<Encode::Base32::GMP>.
+
 
 =head1 AUTHOR
 
 Baldur Kristinsson, December 2016
 
-=head1 TODO
 
-Add functions for converting to/from UUID (Version 1), since both identifier
-types are 128-bit and incorporate a timestamp.
+=head1 LICENSE
 
-=head1 VERSION
+This is free software. It may be copied, distributed and modified under the
+same terms as Perl itself.
 
- 0.1 - Initial version.
- 0.2 - Bugfixes: (a) fix errors on Perl 5.18 and older, (b) address an issue
-       with GMPz wrt Math::BigInt objects.
- 0.3 - Bugfix: Try to prevent 'Inappropriate argument' error from pre-0.43
-       versions of Math::GMPz.
- 0.4 - Bugfix: 'Invalid argument supplied to Math::GMPz::overload_mod' for
-       older versions of Math::GMPz on Windows and FreeBSD. Podfix.
+
+=head1 VERSION HISTORY
+
+ 0.1   - Initial version.
+ 0.2   - Bugfixes: (a) fix errors on Perl 5.18 and older, (b) address an issue
+         with GMPz wrt Math::BigInt objects.
+ 0.3   - Bugfix: Try to prevent 'Inappropriate argument' error from pre-0.43
+         versions of Math::GMPz.
+ 0.4   - Bugfix: 'Invalid argument supplied to Math::GMPz::overload_mod' for
+         older versions of Math::GMPz on Windows and FreeBSD. Podfix.
+ 1.0.0 - UUID conversion support; semantic versioning.
 
 =cut
