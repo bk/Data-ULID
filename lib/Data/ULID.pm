@@ -94,7 +94,8 @@ sub _ulid {
 }
 
 sub _pack {
-    return join '', @_;
+    my ($ts, $rand) = @_;
+    return _zero_pad($ts, 6, "\x00") . _zero_pad($rand, 10, "\x00");
 }
 
 sub _unpack {
@@ -110,7 +111,7 @@ sub _fix_ts {
     if ($CAN_SKIP_BIGINTS) {
         return pack 'Nn', int($ts / (2 << 15)), $ts % (2 << 15);
     } else {
-        return substr chr(0) . Math::BigInt->new($ts)->to_bytes, -6;
+        return Math::BigInt->new($ts)->to_bytes;
     }
 }
 
@@ -121,7 +122,7 @@ sub _unfix_ts {
         my ($high, $low) = unpack 'Nn', $ts;
         $ts = $high * (2 << 15) + $low;
     } else {
-        $ts = Math::BigInt->new->from_bytes($ts);
+        $ts = Math::BigInt->from_bytes($ts);
     }
 
     $ts =~ s/(\d{3})$/.$1/;
@@ -136,6 +137,14 @@ sub _encode {
 sub _decode {
     my ($ts, $rand) = map { _decode_b32($_) } unpack 'A10A16', shift;
     return ($ts, $rand);
+}
+
+sub _zero_pad {
+    my ($value, $mul, $char) = @_;
+    $char ||= '0';
+    $value =~ s/^$char+//;
+    my $left = $mul - length($value) % $mul;
+    return $char x ($left % $mul) . $value;
 }
 
 ### BASE32 ENCODER / DECODER
@@ -155,13 +164,6 @@ sub _normalize {
 
     $s =~ s/$re//g;
     return $s;
-}
-
-sub _zero_pad {
-    my ($value, $mul) = @_;
-    $value =~ s/^0+//;
-    my $left = $mul - length($value) % $mul;
-    return '0' x ($left % $mul) . $value;
 }
 
 sub _encode_b32 {
