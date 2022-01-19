@@ -10,7 +10,7 @@ our @EXPORT_OK = qw/ulid binary_ulid ulid_date ulid_to_uuid uuid_to_ulid/;
 our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK );
 
 use Time::HiRes qw/time/;
-use Math::BigInt try => 'GMP,LTM';
+use Math::BigInt 1.999808 try => 'GMP,LTM';
 use Crypt::PRNG qw/random_bytes/;
 use DateTime;
 
