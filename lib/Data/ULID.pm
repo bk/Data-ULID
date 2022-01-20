@@ -169,13 +169,16 @@ sub _normalize {
 sub _encode_b32 {
     my $bits = unpack 'B*', shift;
     $bits = _zero_pad($bits, 5);
-    $bits =~ s/(.{5})/$ALPHABET_MAP_REVERSE{$1}/eg;
-    return $bits;
+
+    my $result = '';
+    for (my $i = 0; $i < length $bits; $i += 5) {
+        $result .= $ALPHABET_MAP_REVERSE{substr $bits, $i, 5};
+    }
+    return $result;
 }
 
 sub _decode_b32 {
-    my $encoded = shift;
-    $encoded =~ s/(.)/$ALPHABET_MAP{$1}/egi;
+    my $encoded = join '', map { $ALPHABET_MAP{uc $_} } split //, shift;
     return pack 'B*', _zero_pad($encoded, 8);
 }
 
