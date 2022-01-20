@@ -105,12 +105,13 @@ sub _unpack {
 
 sub _fix_ts {
     my $ts = shift;
-    $ts .= '000';
 
-    $ts =~ s/\.(\d{3}).*$/$1/;
     if ($CAN_SKIP_BIGINTS) {
+        $ts *= 1000;
         return pack 'Nn', int($ts / (2 << 15)), $ts % (2 << 15);
     } else {
+        $ts .= '000';
+        $ts =~ s/\.(\d{3}).*$/$1/;
         return Math::BigInt->new($ts)->to_bytes;
     }
 }
@@ -120,13 +121,12 @@ sub _unfix_ts {
 
     if ($CAN_SKIP_BIGINTS) {
         my ($high, $low) = unpack 'Nn', $ts;
-        $ts = $high * (2 << 15) + $low;
+        return ($high * (2 << 15) + $low) / 1000;
     } else {
         $ts = Math::BigInt->from_bytes($ts);
+        $ts =~ s/(\d{3})$/.$1/;
+        return $ts;
     }
-
-    $ts =~ s/(\d{3})$/.$1/;
-    return $ts;
 }
 
 sub _encode {
