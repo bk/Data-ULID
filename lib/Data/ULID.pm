@@ -142,7 +142,9 @@ sub _decode {
 sub _zero_pad {
     my ($value, $mul, $char) = @_;
     $char ||= '0';
-    $value =~ s/^$char+//;
+
+    while ($char eq substr $value, 0, 1) { substr $value, 0, 1, '' }
+
     my $left = $mul - length($value) % $mul;
     return $char x ($left % $mul) . $value;
 }
