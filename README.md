@@ -150,3 +150,4 @@ same terms as Perl itself.
     1.1.0 - Speedups courtesy of Bartosz Jarzyna (brtastic on CPAN, bbrtj on
             Github). Use Crypt::PRNG for random number generation.
     1.1.1 - Fix module version number.
+    1.1.2 - Fix POD (version history).
