@@ -149,3 +149,4 @@ same terms as Perl itself.
     1.0.0 - UUID conversion support; semantic versioning.
     1.1.0 - Speedups courtesy of Bartosz Jarzyna (brtastic on CPAN, bbrtj on
             Github). Use Crypt::PRNG for random number generation.
+    1.1.1 - Fix module version number.
