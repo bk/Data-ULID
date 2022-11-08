@@ -12,7 +12,8 @@ our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK );
 use Time::HiRes qw/time/;
 use Math::BigInt 1.999808 try => 'GMP,LTM';
 use Crypt::PRNG qw/random_bytes/;
-use DateTime;
+
+use constant HAS_DATETIME => eval { require DateTime; 1 };
 
 use Config;
 our $CAN_SKIP_BIGINTS = $Config{ivsize} >= 8;
@@ -29,7 +30,10 @@ sub binary_ulid {
 
 sub ulid_date {
     my $ulid = shift;
+
+    die "ulid_date() requires DateTime module" unless HAS_DATETIME;
     die "ulid_date() needs a normal or binary ULID as parameter" unless $ulid;
+
     my ($ts, $rand) = _ulid($ulid);
 
     return DateTime->from_epoch(epoch => _unfix_ts($ts));
@@ -381,3 +385,4 @@ same terms as Perl itself.
  1.1.2 - Fix POD (version history).
 
 =cut
+
