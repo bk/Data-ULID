@@ -143,10 +143,13 @@ sub _zero_pad {
     my ($value, $mul, $char) = @_;
     $char ||= '0';
 
-    while ($char eq substr $value, 0, 1) { substr $value, 0, 1, '' }
+    my $padded = length($value) % $mul;
+    return $value if $padded == 0;
 
-    my $left = $mul - length($value) % $mul;
-    return $char x ($left % $mul) . $value;
+    my $padding = substr $value, 0, $padded, '';
+
+    return $value if $padding eq $char x $padded;
+    return $char x ($mul - $padded) . $padding . $value;
 }
 
 ### BASE32 ENCODER / DECODER
@@ -169,18 +172,18 @@ sub _normalize {
 }
 
 sub _encode_b32 {
-    my $bits = unpack 'B*', shift;
-    $bits = _zero_pad($bits, 5);
+    my $bits = _zero_pad(unpack('B*', shift), 5);
+    my $len = length $bits;
 
     my $result = '';
-    for (my $i = 0; $i < length $bits; $i += 5) {
+    for (my $i = 0; $i < $len; $i += 5) {
         $result .= $ALPHABET_MAP_REVERSE{substr $bits, $i, 5};
     }
     return $result;
 }
 
 sub _decode_b32 {
-    my $encoded = join '', map { $ALPHABET_MAP{uc $_} } split //, shift;
+    my $encoded = join '', map { $ALPHABET_MAP{$_} } split //, uc shift;
     return pack 'B*', _zero_pad($encoded, 8);
 }
 
@@ -377,3 +380,4 @@ same terms as Perl itself.
  1.0.0 - UUID conversion support; semantic versioning.
 
 =cut
+
