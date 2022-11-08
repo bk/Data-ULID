@@ -124,10 +124,6 @@ similarly wrong. Such UUIDs should only be used in contexts where no checking
 of these fields will be performed and no attempt will be made to extract or
 validate non-random information (i.e. timestamp, MAC address or namespace).
 
-# DEPENDENCIES
-
-[Math::Random::Secure](https://metacpan.org/pod/Math::Random::Secure), [Encode::Base32::GMP](https://metacpan.org/pod/Encode::Base32::GMP).
-
 # AUTHOR
 
 Baldur Kristinsson, December 2016

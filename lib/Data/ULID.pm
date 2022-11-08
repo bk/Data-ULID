@@ -349,11 +349,6 @@ validate non-random information (i.e. timestamp, MAC address or namespace).
 =back
 
 
-=head1 DEPENDENCIES
-
-L<Math::Random::Secure>, L<Encode::Base32::GMP>.
-
-
 =head1 AUTHOR
 
 Baldur Kristinsson, December 2016
