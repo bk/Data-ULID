@@ -10,12 +10,19 @@ our @EXPORT_OK = qw/ulid binary_ulid ulid_date ulid_to_uuid uuid_to_ulid/;
 our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK );
 
 use Time::HiRes qw/time/;
-use Math::BigInt 1.999808 try => 'GMP,LTM';
 use Crypt::PRNG qw/random_bytes/;
 use DateTime;
 
-use Config;
-our $CAN_SKIP_BIGINTS = $Config{ivsize} >= 8;
+BEGIN {
+    use Config;
+    use constant CAN_SKIP_BIGINTS => $Config{ivsize} >= 8;
+
+    if (!CAN_SKIP_BIGINTS) {
+        require Math::BigInt;
+        Math::BigInt->VERSION(1.999808);
+        Math::BigInt->import(try => 'GMP,LTM');
+    }
+}
 
 ### EXPORTED ULID FUNCTIONS
 
@@ -106,7 +113,7 @@ sub _unpack {
 sub _fix_ts {
     my $ts = shift;
 
-    if ($CAN_SKIP_BIGINTS) {
+    if (CAN_SKIP_BIGINTS) {
         $ts *= 1000;
         return pack 'Nn', int($ts / (2 << 15)), $ts % (2 << 15);
     } else {
@@ -119,7 +126,7 @@ sub _fix_ts {
 sub _unfix_ts {
     my $ts = shift;
 
-    if ($CAN_SKIP_BIGINTS) {
+    if (CAN_SKIP_BIGINTS) {
         my ($high, $low) = unpack 'Nn', $ts;
         return ($high * (2 << 15) + $low) / 1000;
     } else {
