@@ -140,16 +140,18 @@ sub _decode {
 }
 
 sub _zero_pad {
-    my ($value, $mul, $char) = @_;
-    $char ||= '0';
+    # this function is used a lot. Keep it as lean as possible
+    # my ($value, $character_multiplier, $padding_character) = @_;
+    my $value = shift;
 
-    my $padded = length($value) % $mul;
+    my $padded = length($value) % $_[0];
     return $value if $padded == 0;
 
+    $_[1] ||= 0;
     my $padding = substr $value, 0, $padded, '';
 
-    return $value if $padding eq $char x $padded;
-    return $char x ($mul - $padded) . $padding . $value;
+    return $value if $padding eq $_[1] x $padded;
+    return $_[1] x ($_[0] - $padded) . $padding . $value;
 }
 
 ### BASE32 ENCODER / DECODER
