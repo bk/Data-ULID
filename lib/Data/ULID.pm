@@ -107,8 +107,8 @@ sub _fix_ts {
     my $ts = shift;
 
     if ($CAN_SKIP_BIGINTS) {
-        $ts *= 1000;
-        return pack 'Nn', int($ts / (2 << 15)), $ts % (2 << 15);
+        $ts = int($ts * 1000);
+        return pack 'Nn', $ts >> 16, $ts & 0xffff;
     } else {
         $ts .= '000';
         $ts =~ s/\.(\d{3}).*$/$1/;
@@ -121,7 +121,7 @@ sub _unfix_ts {
 
     if ($CAN_SKIP_BIGINTS) {
         my ($high, $low) = unpack 'Nn', $ts;
-        return ($high * (2 << 15) + $low) / 1000;
+        return (($high << 16) + $low) / 1000;
     } else {
         $ts = Math::BigInt->from_bytes($ts);
         $ts =~ s/(\d{3})$/.$1/;
