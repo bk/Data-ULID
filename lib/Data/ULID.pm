@@ -107,8 +107,8 @@ sub _fix_ts {
     my $ts = shift;
 
     if ($CAN_SKIP_BIGINTS) {
-        $ts *= 1000;
-        return pack 'Nn', int($ts / (2 << 15)), $ts % (2 << 15);
+        $ts = int($ts * 1000);
+        return pack 'Nn', $ts >> 16, $ts & 0xffff;
     } else {
         $ts .= '000';
         $ts =~ s/\.(\d{3}).*$/$1/;
@@ -121,7 +121,7 @@ sub _unfix_ts {
 
     if ($CAN_SKIP_BIGINTS) {
         my ($high, $low) = unpack 'Nn', $ts;
-        return ($high * (2 << 15) + $low) / 1000;
+        return (($high << 16) + $low) / 1000;
     } else {
         $ts = Math::BigInt->from_bytes($ts);
         $ts =~ s/(\d{3})$/.$1/;
@@ -140,13 +140,18 @@ sub _decode {
 }
 
 sub _zero_pad {
-    my ($value, $mul, $char) = @_;
-    $char ||= '0';
+    # this function is used a lot. Keep it as lean as possible
+    # my ($value, $character_multiplier, $padding_character) = @_;
+    my $value = shift;
 
-    while ($char eq substr $value, 0, 1) { substr $value, 0, 1, '' }
+    my $padded = length($value) % $_[0];
+    return $value if $padded == 0;
 
-    my $left = $mul - length($value) % $mul;
-    return $char x ($left % $mul) . $value;
+    $_[1] ||= 0;
+    my $padding = substr $value, 0, $padded, '';
+
+    return $value if $padding eq $_[1] x $padded;
+    return $_[1] x ($_[0] - $padded) . $padding . $value;
 }
 
 ### BASE32 ENCODER / DECODER
@@ -169,18 +174,18 @@ sub _normalize {
 }
 
 sub _encode_b32 {
-    my $bits = unpack 'B*', shift;
-    $bits = _zero_pad($bits, 5);
+    my $bits = _zero_pad(unpack('B*', shift), 5);
+    my $len = length $bits;
 
     my $result = '';
-    for (my $i = 0; $i < length $bits; $i += 5) {
+    for (my $i = 0; $i < $len; $i += 5) {
         $result .= $ALPHABET_MAP_REVERSE{substr $bits, $i, 5};
     }
     return $result;
 }
 
 sub _decode_b32 {
-    my $encoded = join '', map { $ALPHABET_MAP{uc $_} } split //, shift;
+    my $encoded = join '', map { $ALPHABET_MAP{$_} } split //, uc shift;
     return pack 'B*', _zero_pad($encoded, 8);
 }
 
@@ -381,3 +386,4 @@ same terms as Perl itself.
  1.1.2 - Fix POD (version history).
 
 =cut
+
