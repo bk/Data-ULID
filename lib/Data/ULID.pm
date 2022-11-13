@@ -10,12 +10,19 @@ our @EXPORT_OK = qw/ulid binary_ulid ulid_date ulid_to_uuid uuid_to_ulid/;
 our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK );
 
 use Time::HiRes qw/time/;
-use Math::BigInt 1.999808 try => 'GMP,LTM';
 use Crypt::PRNG qw/random_bytes/;
 use DateTime;
 
-use Config;
-our $CAN_SKIP_BIGINTS = $Config{ivsize} >= 8;
+BEGIN {
+    use Config;
+    use constant CAN_SKIP_BIGINTS => $Config{ivsize} >= 8;
+
+    if (!CAN_SKIP_BIGINTS) {
+        require Math::BigInt;
+        Math::BigInt->VERSION(1.999808);
+        Math::BigInt->import(try => 'GMP,LTM');
+    }
+}
 
 ### EXPORTED ULID FUNCTIONS
 
@@ -119,7 +126,7 @@ sub _fix_ts {
 sub _unfix_ts {
     my $ts = shift;
 
-    if ($CAN_SKIP_BIGINTS) {
+    if (CAN_SKIP_BIGINTS) {
         my ($high, $low) = unpack 'Nn', $ts;
         return (($high << 16) + $low) / 1000;
     } else {
@@ -354,11 +361,6 @@ validate non-random information (i.e. timestamp, MAC address or namespace).
 =back
 
 
-=head1 DEPENDENCIES
-
-L<Math::Random::Secure>, L<Encode::Base32::GMP>.
-
-
 =head1 AUTHOR
 
 Baldur Kristinsson, December 2016
@@ -368,22 +370,6 @@ Baldur Kristinsson, December 2016
 
 This is free software. It may be copied, distributed and modified under the
 same terms as Perl itself.
-
-
-=head1 VERSION HISTORY
-
- 0.1   - Initial version.
- 0.2   - Bugfixes: (a) fix errors on Perl 5.18 and older, (b) address an issue
-         with GMPz wrt Math::BigInt objects.
- 0.3   - Bugfix: Try to prevent 'Inappropriate argument' error from pre-0.43
-         versions of Math::GMPz.
- 0.4   - Bugfix: 'Invalid argument supplied to Math::GMPz::overload_mod' for
-         older versions of Math::GMPz on Windows and FreeBSD. Podfix.
- 1.0.0 - UUID conversion support; semantic versioning.
- 1.1.0 - Speedups courtesy of Bartosz Jarzyna (brtastic on CPAN, bbrtj on
-         Github). Use Crypt::PRNG for random number generation.
- 1.1.1 - Fix module version number.
- 1.1.2 - Fix POD (version history).
 
 =cut
 
