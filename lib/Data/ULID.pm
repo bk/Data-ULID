@@ -117,7 +117,7 @@ sub _unpack {
 sub _fix_ts {
     my $ts = shift;
 
-    if ($CAN_SKIP_BIGINTS) {
+    if (CAN_SKIP_BIGINTS) {
         $ts = int($ts * 1000);
         return pack 'Nn', $ts >> 16, $ts & 0xffff;
     } else {
