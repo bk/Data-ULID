@@ -3,7 +3,7 @@ package Data::ULID;
 use strict;
 use warnings;
 
-our $VERSION = '1.1.2';
+our $VERSION = '1.2';
 
 use base qw(Exporter);
 our @EXPORT_OK = qw/ulid binary_ulid ulid_date ulid_to_uuid uuid_to_ulid/;
@@ -274,15 +274,19 @@ timestamp part.
 
  $ulid = ulid();
 
-Given a DateTime object as parameter, the function will set the timestamp part
-based on that:
-
- $ulid = ulid($datetime_obj);
-
 Given a binary ULID as parameter, it returns the same ULID in canonical
 format:
 
  $ulid = ulid($binary_ulid);
+
+Given a DateTime object as parameter, the function will set the timestamp part
+of the returned ULID accordingly:
+
+ $ulid = ulid($datetime_obj);
+
+This functionality obviously requires the DateTime module to be installed.
+Basic usage of C<Data::ULID> does not require this module, but it is
+recommended.
 
 =head2 Binary representation
 
@@ -300,7 +304,8 @@ ULID in the canonical representation and convert it to binary:
 =head2 Datetime extraction
 
 The C<ulid_date()> function takes a ULID (canonical or binary) and returns
-a DateTime object corresponding to the timestamp it encodes.
+a DateTime object corresponding to the timestamp it encodes. As above, this
+requires the DateTime module to be installed.
 
  $datetime = ulid_date($ulid);
 
