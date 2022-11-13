@@ -1,3 +1,6 @@
+1.2.1
+    - Fix module version number before release on CPAN (dist.ini)
+
 1.2
     - Make module useable in the absence of DateTime (Bartosz Jarzyna)
     - Reorganization: .enditorconfig, Changes file (Bartosz Jarzyna)
