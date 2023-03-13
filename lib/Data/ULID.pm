@@ -257,7 +257,7 @@ Timestamp can always be easily extracted if so desired.
 
 =item *
 
-Limited compatibility with UUIDS, since both are 128-bit formats.
+Limited compatibility with UUIDs, since both are 128-bit formats.
 Some conversion back and forth is possible.
 
 =back
