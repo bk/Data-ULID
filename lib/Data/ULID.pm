@@ -14,7 +14,15 @@ use Time::HiRes qw/time/;
 use Bytes::Random::Secure::Tiny;
 my $rng = Bytes::Random::Secure::Tiny->new;
 
-use constant HAS_DATETIME => eval { require DateTime; 1 };
+my $datetime_status;
+sub HAS_DATETIME
+{
+    if (!defined $datetime_status) {
+        $datetime_status = eval { require DateTime; 1 };
+    }
+
+    return $datetime_status;
+}
 
 BEGIN {
     use Config;
